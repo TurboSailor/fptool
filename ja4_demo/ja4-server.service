@@ -1,0 +1,27 @@
+[Unit]
+Description=JA4 Fingerprint Server with Let's Encrypt
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/fptool/ja4_demo
+Environment=DOMAIN=ja4.yourdomain.com
+Environment=EMAIL=admin@yourdomain.com
+ExecStart=/root/fptool/ja4_demo/ja4-server
+Restart=always
+RestartSec=10
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/root/fptool/ja4_demo
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ja4-server
+
+[Install]
+WantedBy=multi-user.target 

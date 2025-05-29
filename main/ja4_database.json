@@ -1,0 +1,98 @@
+[
+  {
+    "application": "Chromium Browser",
+    "user_agent_string": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+    "ja4_fingerprint": "t00i1515h2_8daaf6152771_7383256d4bcd",
+    "client_ip": "185.148.1.88:65159",
+    "timestamp": "2025-05-29T17:25:35.527381217+03:00",
+    "observation_count": 2
+  },
+  {
+    "application": "Safari Browser",
+    "user_agent_string": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15",
+    "ja4_fingerprint": "t00i2013h2_a09f3c656075_820007d8e114",
+    "client_ip": "45.148.169.169:12602",
+    "timestamp": "2025-05-29T13:41:11.392037147+03:00",
+    "observation_count": 5
+  },
+  {
+    "application": "Firefox Browser",
+    "user_agent_string": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0",
+    "ja4_fingerprint": "t13i1716h2_5b57614c22b0_074456dd2a76",
+    "client_ip": "5.35.38.69:50802",
+    "timestamp": "2025-05-29T13:20:59.727234677+03:00",
+    "observation_count": 3
+  },
+  {
+    "application": "wget",
+    "user_agent_string": "Wget/1.21.4",
+    "ja4_fingerprint": "t13i751000_479067518aa3_af16739ba828",
+    "client_ip": "127.0.0.1:59576",
+    "timestamp": "2025-05-29T13:47:53.357920274+03:00",
+    "observation_count": 1
+  },
+  {
+    "application": "Firefox Browser",
+    "user_agent_string": "Mozilla/5.0 (Android 15; Mobile; rv:133.0) Gecko/133.0 Firefox/133.0",
+    "ja4_fingerprint": "t13i1715h2_5b57614c22b0_e3f277f2b548",
+    "client_ip": "194.165.185.242:50310",
+    "timestamp": "2025-05-29T13:39:07.007239624+03:00",
+    "observation_count": 2
+  },
+  {
+    "application": "Opera Browser",
+    "user_agent_string": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36 OPR/88.0.0.0",
+    "ja4_fingerprint": "t00i1515h2_8daaf6152771_ea9b6c9b1ab0",
+    "client_ip": "85.192.49.196:13234",
+    "timestamp": "2025-05-29T13:22:20.324205276+03:00",
+    "observation_count": 3
+  },
+  {
+    "application": "Chromium Browser",
+    "user_agent_string": "Mozilla/5.0 (Linux; U; Android 15; en-US; PHP110 Build/AP3A.240617.008) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.58 UCBrowser/13.7.8.1322 Mobile Safari/537.36",
+    "ja4_fingerprint": "t00i1515h2_8daaf6152771_e84ec0dcb512",
+    "client_ip": "85.192.49.196:44316",
+    "timestamp": "2025-05-29T13:21:46.219260029+03:00",
+    "observation_count": 3
+  },
+  {
+    "application": "",
+    "user_agent_string": "Unknown",
+    "ja4_fingerprint": "t00i1516h2_8daaf6152771_0049cd46dd56",
+    "client_ip": "185.148.1.88:65062",
+    "timestamp": "2025-05-29T17:25:32.381160166+03:00",
+    "observation_count": 2
+  },
+  {
+    "application": "Chromium Browser",
+    "user_agent_string": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+    "ja4_fingerprint": "t00i1515h2_8daaf6152771_ea9b6c9b1ab0",
+    "client_ip": "45.148.169.169:18612",
+    "timestamp": "2025-05-29T13:32:56.356205588+03:00",
+    "observation_count": 5
+  },
+  {
+    "application": "Safari Browser",
+    "user_agent_string": "Mozilla/5.0 (iPad; CPU OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/92.0.4515.90 Mobile/15E148 Safari/604.1",
+    "ja4_fingerprint": "t00i2613h2_2802a3db6c62_6ad77a2e6ad4",
+    "client_ip": "194.165.185.135:56603",
+    "timestamp": "2025-05-29T13:37:21.307262176+03:00",
+    "observation_count": 3
+  },
+  {
+    "application": "Mobile Browser",
+    "user_agent_string": "Mozilla/5.0 (Android 15; Mobile; rv:131.0) Gecko/131.0 Taktak/1.1.0",
+    "ja4_fingerprint": "t13i1714h2_5b57614c22b0_b1c2273f7656",
+    "client_ip": "85.192.49.196:12908",
+    "timestamp": "2025-05-29T13:22:46.430262466+03:00",
+    "observation_count": 3
+  },
+  {
+    "application": "curl",
+    "user_agent_string": "curl/8.5.0",
+    "ja4_fingerprint": "t13i3111h2_e8f1e7e78f70_3c4997099d1d",
+    "client_ip": "127.0.0.1:56008",
+    "timestamp": "2025-05-29T13:56:51.528083866+03:00",
+    "observation_count": 1
+  }
+]
