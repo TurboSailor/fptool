@@ -12,7 +12,6 @@ type FingerprintRecord struct {
 	Notes                *string `json:"notes"`
 	Ja4Fingerprint       *string `json:"ja4_fingerprint"`
 	Ja4FingerprintString *string `json:"ja4_fingerprint_string"`
-	Ja4sFingerprint      *string `json:"ja4s_fingerprint"`
 	Ja4hFingerprint      *string `json:"ja4h_fingerprint"`
 	Ja4xFingerprint      *string `json:"ja4x_fingerprint"`
 	Ja4tFingerprint      *string `json:"ja4t_fingerprint"`

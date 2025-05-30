@@ -16,13 +16,13 @@ import (
 func main() {
 
 	// Load FingerPrints
-	ja4Map, ja4sMap, err := parser.LoadFingerPrints("fingerprints.json")
+	ja4Map, err := parser.LoadFingerPrints("fingerprints.json")
 	if err != nil {
 		panic(err)
 	}
 
 	// If too much memory is used change to 1600
-	handle, err := pcap.OpenLive("enp0s3", 65535, true, pcap.BlockForever)
+	handle, err := pcap.OpenLive("ens3", 65535, true, pcap.BlockForever)
 	//handle, err := pcap.OpenLive("eth0", 65535, true, pcap.BlockForever)
 	if err != nil {
 		log.Fatal(err)
@@ -37,8 +37,7 @@ func main() {
 
 	// Till here is normal flow
 	streamFactory := &tcp.StreamFactory{
-		JA4Map:  ja4Map,
-		JA4SMap: ja4sMap,
+		JA4Map: ja4Map,
 	}
 	streamPool := tcpassembly.NewStreamPool(streamFactory)
 	assembler := tcpassembly.NewAssembler(streamPool)

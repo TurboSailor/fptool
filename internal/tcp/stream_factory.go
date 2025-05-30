@@ -8,13 +8,12 @@ import (
 )
 
 type StreamFactory struct {
-	JA4Map  map[string]*model.FingerprintRecord
-	JA4SMap map[string]*model.FingerprintRecord
+	JA4Map map[string]*model.FingerprintRecord
 }
 
 func (s *StreamFactory) New(net, transport gopacket.Flow) tcpassembly.Stream {
 	r := tcpreader.NewReaderStream()
 	//fmt.Printf("New stream from %v to %v\n", net.Src(), net.Dst())
-	go processStream(&r, net, s.JA4Map, s.JA4SMap)
+	go processStream(&r, net, s.JA4Map)
 	return &r
 }

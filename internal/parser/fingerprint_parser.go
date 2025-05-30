@@ -8,11 +8,11 @@ import (
 	"github.com/voukatas/go-ja4/internal/model"
 )
 
-func LoadFingerPrints(fileName string) (map[string]*model.FingerprintRecord, map[string]*model.FingerprintRecord, error) {
+func LoadFingerPrints(fileName string) (map[string]*model.FingerprintRecord, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		//log.Println("Failed to open file: %v", err)
-		return nil, nil, fmt.Errorf("failed to open file: %v", err)
+		return nil, fmt.Errorf("failed to open file: %v", err)
 	}
 	defer file.Close()
 
@@ -22,11 +22,10 @@ func LoadFingerPrints(fileName string) (map[string]*model.FingerprintRecord, map
 	_, err = decoder.Token()
 	if err != nil {
 		//log.Fatalf("Failed to read JSON token: %v", err)
-		return nil, nil, fmt.Errorf("failed to read json token: %v", err)
+		return nil, fmt.Errorf("failed to read json token: %v", err)
 	}
 
 	ja4Map := make(map[string]*model.FingerprintRecord)
-	ja4sMap := make(map[string]*model.FingerprintRecord)
 
 	// Decode each element in the array
 	for decoder.More() {
@@ -34,7 +33,7 @@ func LoadFingerPrints(fileName string) (map[string]*model.FingerprintRecord, map
 		err := decoder.Decode(&record)
 		if err != nil {
 			//log.Fatalf("Failed to decode JSON: %v", err)
-			return nil, nil, fmt.Errorf("failed to decode json: %v", err)
+			return nil, fmt.Errorf("failed to decode json: %v", err)
 		}
 
 		recordPointer := &record
@@ -42,34 +41,24 @@ func LoadFingerPrints(fileName string) (map[string]*model.FingerprintRecord, map
 		if record.Ja4Fingerprint != nil {
 			ja4Map[*record.Ja4Fingerprint] = recordPointer
 		}
-		if record.Ja4sFingerprint != nil {
-			ja4sMap[*record.Ja4sFingerprint] = recordPointer
-		}
 	}
 
 	// Read closing bracket
 	_, err = decoder.Token()
 	if err != nil {
 		//log.Fatalf("Failed to read closing JSON token: %v", err)
-		return nil, nil, fmt.Errorf("failed to read closing json token: %v", err)
+		return nil, fmt.Errorf("failed to read closing json token: %v", err)
 	}
 
 	// fmt.Printf("Number of Ja4Fingerprints: %d\n", len(ja4Map))
-	// fmt.Printf("Number of Ja4sFingerprints: %d\n", len(ja4sMap))
 	//
 	// fmt.Println("Map based on Ja4Fingerprint:")
 	// for key, value := range ja4Map {
 	// 	fmt.Printf("Key: %s\n", key)
 	// 	PrintRecord(value)
 	// }
-	//
-	// fmt.Println("\nMap based on Ja4sFingerprint:")
-	// for key, value := range ja4sMap {
-	// 	fmt.Printf("Key: %s\n", key)
-	// 	PrintRecord(value)
-	// }
 
-	return ja4Map, ja4sMap, nil
+	return ja4Map, nil
 }
 
 func PrintRecord(record *model.FingerprintRecord) {
@@ -84,7 +73,6 @@ func PrintRecord(record *model.FingerprintRecord) {
 	fmt.Printf("  Notes: %s\n", deref(record.Notes))
 	fmt.Printf("  JA4 Fingerprint: %s\n", deref(record.Ja4Fingerprint))
 	fmt.Printf("  JA4 Fingerprint String: %s\n", deref(record.Ja4FingerprintString))
-	fmt.Printf("  JA4s Fingerprint: %s\n", deref(record.Ja4sFingerprint))
 	fmt.Printf("  JA4h Fingerprint: %s\n", deref(record.Ja4hFingerprint))
 	fmt.Printf("  JA4x Fingerprint: %s\n", deref(record.Ja4xFingerprint))
 	fmt.Printf("  JA4t Fingerprint: %s\n", deref(record.Ja4tFingerprint))

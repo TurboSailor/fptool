@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/voukatas/go-ja4/internal/cache"
 	"github.com/voukatas/go-ja4/internal/model"
 	"github.com/voukatas/go-ja4/internal/parser"
 	"github.com/voukatas/go-ja4/pkg/ja4"
@@ -16,7 +17,7 @@ import (
 
 const maxBufferSize = 16 * 1024 // 16 KB
 
-func processStream(r *tcpreader.ReaderStream, net gopacket.Flow, ja4Map, ja4sMap map[string]*model.FingerprintRecord) {
+func processStream(r *tcpreader.ReaderStream, net gopacket.Flow, ja4Map map[string]*model.FingerprintRecord) {
 	// fmt.Printf("Processing stream from %v to %v\n", net.Src(), net.Dst())
 	// defer fmt.Printf("Finished processing stream from %v to %v\n", net.Src(), net.Dst())
 	var buffer bytes.Buffer
@@ -72,7 +73,12 @@ func processStream(r *tcpreader.ReaderStream, net gopacket.Flow, ja4Map, ja4sMap
 				if err != nil {
 					fmt.Println("Error parsing TLS Client Hello:", err)
 				} else {
-					fmt.Printf("JA4 Fingerprint: %s network: %v\n", ja4Fingerprint, net)
+					clientIP := net.Src().String()
+					fmt.Printf("JA4 Fingerprint: %s for client IP: %s network: %v\n", ja4Fingerprint, clientIP, net)
+
+					// Сохраняем JA4 отпечаток в кеш
+					cache.SaveJA4(clientIP, ja4Fingerprint)
+
 					if val := ja4Map[ja4Fingerprint]; val != nil {
 						parser.PrintRecord(val)
 					}
@@ -82,24 +88,6 @@ func processStream(r *tcpreader.ReaderStream, net gopacket.Flow, ja4Map, ja4sMap
 				buffer.Next(totalLength)
 				continue
 
-			} else if handshakeType == 0x02 { // Server Hello
-				//fmt.Println("Complete TLS Server Hello message detected")
-
-				protocol := 't' // 't' for TCP
-				ja4sFingerprint, err := ja4.ParseServerHelloForJA4S(data[:totalLength], byte(protocol))
-				if err != nil {
-					fmt.Println("Error parsing TLS Server Hello:", err)
-				} else {
-					//fmt.Printf("JA4S Fingerprint: %s\n", ja4sFingerprint)
-					fmt.Printf("JA4S Fingerprint: %s network: %v\n", ja4sFingerprint, net)
-					if val := ja4sMap[ja4sFingerprint]; val != nil {
-						parser.PrintRecord(val)
-					}
-				}
-
-				// Remove the processed data from the buffer
-				buffer.Next(totalLength)
-				continue
 			} else {
 				// Not interested in other handshake types
 				// Skip the entire TLS record
