@@ -1,5 +1,45 @@
 [
   {
+    "application": "Chromium Browser",
+    "user_agent_string": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+    "ja4_fingerprint": "t00d1517h2_8daaf6152771_0049cd46dd56",
+    "client_ip": "185.148.1.88:51519",
+    "timestamp": "2025-05-29T17:38:43.674846135+03:00",
+    "observation_count": 1
+  },
+  {
+    "application": "Firefox Browser",
+    "user_agent_string": "Mozilla/5.0 (Android 15; Mobile; rv:139.0) Gecko/139.0 Firefox/139.0",
+    "ja4_fingerprint": "t13d1717h2_5b57614c22b0_074456dd2a76",
+    "client_ip": "85.192.49.196:53346",
+    "timestamp": "2025-05-29T17:40:08.437742699+03:00",
+    "observation_count": 1
+  },
+  {
+    "application": "Chromium Browser",
+    "user_agent_string": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
+    "ja4_fingerprint": "t00d1516h2_8daaf6152771_7383256d4bcd",
+    "client_ip": "85.192.49.196:45048",
+    "timestamp": "2025-05-29T17:40:35.845295926+03:00",
+    "observation_count": 1
+  },
+  {
+    "application": "Opera Browser",
+    "user_agent_string": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36 OPR/88.0.0.0",
+    "ja4_fingerprint": "t00d1516h2_8daaf6152771_ea9b6c9b1ab0",
+    "client_ip": "85.192.49.196:11386",
+    "timestamp": "2025-05-29T17:41:27.030418678+03:00",
+    "observation_count": 1
+  },
+  {
+    "application": "",
+    "user_agent_string": "Unknown",
+    "ja4_fingerprint": "t13i130900_f57a46bbacb6_978e6e278f4f",
+    "client_ip": "79.124.58.198:37592",
+    "timestamp": "2025-05-29T17:52:00.692957394+03:00",
+    "observation_count": 1
+  },
+  {
     "application": "Firefox Browser",
     "user_agent_string": "Mozilla/5.0 (Android 15; Mobile; rv:133.0) Gecko/133.0 Firefox/133.0",
     "ja4_fingerprint": "t13i1715h2_5b57614c22b0_e3f277f2b548",
@@ -45,46 +85,6 @@
     "ja4_fingerprint": "t00d1516h1_8daaf6152771_e84ec0dcb512",
     "client_ip": "85.192.49.196:54918",
     "timestamp": "2025-05-29T17:41:11.961910805+03:00",
-    "observation_count": 1
-  },
-  {
-    "application": "Chromium Browser",
-    "user_agent_string": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
-    "ja4_fingerprint": "t00d1517h2_8daaf6152771_0049cd46dd56",
-    "client_ip": "185.148.1.88:51519",
-    "timestamp": "2025-05-29T17:38:43.674846135+03:00",
-    "observation_count": 1
-  },
-  {
-    "application": "Firefox Browser",
-    "user_agent_string": "Mozilla/5.0 (Android 15; Mobile; rv:139.0) Gecko/139.0 Firefox/139.0",
-    "ja4_fingerprint": "t13d1717h2_5b57614c22b0_074456dd2a76",
-    "client_ip": "85.192.49.196:53346",
-    "timestamp": "2025-05-29T17:40:08.437742699+03:00",
-    "observation_count": 1
-  },
-  {
-    "application": "Chromium Browser",
-    "user_agent_string": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
-    "ja4_fingerprint": "t00d1516h2_8daaf6152771_7383256d4bcd",
-    "client_ip": "85.192.49.196:45048",
-    "timestamp": "2025-05-29T17:40:35.845295926+03:00",
-    "observation_count": 1
-  },
-  {
-    "application": "Opera Browser",
-    "user_agent_string": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36 OPR/88.0.0.0",
-    "ja4_fingerprint": "t00d1516h2_8daaf6152771_ea9b6c9b1ab0",
-    "client_ip": "85.192.49.196:11386",
-    "timestamp": "2025-05-29T17:41:27.030418678+03:00",
-    "observation_count": 1
-  },
-  {
-    "application": "",
-    "user_agent_string": "Unknown",
-    "ja4_fingerprint": "t13i130900_f57a46bbacb6_978e6e278f4f",
-    "client_ip": "79.124.58.198:37592",
-    "timestamp": "2025-05-29T17:52:00.692957394+03:00",
     "observation_count": 1
   }
 ]
