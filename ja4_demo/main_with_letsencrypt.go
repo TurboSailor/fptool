@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mssola/user_agent"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -46,6 +47,17 @@ type DatabaseEntry struct {
 	ClientIP         string    `json:"client_ip,omitempty"`
 	Timestamp        time.Time `json:"timestamp"`
 	ObservationCount int       `json:"observation_count"`
+	Browser          string    `json:"browser,omitempty"`
+	BrowserVersion   string    `json:"browser_version,omitempty"`
+	OS               string    `json:"os,omitempty"`
+	Mobile           bool      `json:"mobile,omitempty"`
+	Bot              bool      `json:"bot,omitempty"`
+}
+
+type PendingEntry struct {
+	JA4Fingerprint string
+	ClientIP       string
+	Timestamp      time.Time
 }
 
 var (
@@ -57,6 +69,11 @@ var (
 	databaseMux  = sync.RWMutex{}
 	saveMux      = sync.Mutex{}
 	databaseFile = "ja4_database.json"
+
+	// Система ожидающих записей
+	pendingEntries = make(map[string]*PendingEntry) // key: clientIP
+	pendingMux     = sync.RWMutex{}
+	pendingTimeout = 30 * time.Second
 )
 
 // GREASE values as defined in RFC 8701
@@ -105,63 +122,168 @@ func extensionsToString(extensions []uint16) string {
 	return strings.Join(parts, ",")
 }
 
-func identifyApplication(userAgent string) string {
-	ua := strings.ToLower(userAgent)
+func identifyApplication(userAgentString string) (string, string, string, string, bool, bool) {
+	if userAgentString == "" || userAgentString == "Unknown" {
+		return "", "", "", "", false, false
+	}
 
-	// Common browsers
-	if strings.Contains(ua, "chrome") && !strings.Contains(ua, "edg") {
-		if strings.Contains(ua, "opr") || strings.Contains(ua, "opera") {
-			return "Opera Browser"
+	ua := user_agent.New(userAgentString)
+
+	// Определяем браузер и версию
+	browser, version := ua.Browser()
+	engineName, engineVersion := ua.Engine()
+	osInfo := ua.OS()
+	isMobile := ua.Mobile()
+	isBot := ua.Bot()
+
+	var application string
+	var browserInfo string
+	var browserVersion string
+	var osName string
+
+	// Обработка ботов
+	if isBot {
+		application = "Bot/Crawler"
+		browserInfo = browser
+		if browser == "" {
+			// Fallback для специфичных ботов
+			uaLower := strings.ToLower(userAgentString)
+			if strings.Contains(uaLower, "googlebot") {
+				browserInfo = "Googlebot"
+			} else if strings.Contains(uaLower, "bingbot") {
+				browserInfo = "Bingbot"
+			} else if strings.Contains(uaLower, "facebookexternalhit") {
+				browserInfo = "Facebook Bot"
+			} else if strings.Contains(uaLower, "twitterbot") {
+				browserInfo = "Twitter Bot"
+			} else {
+				browserInfo = "Unknown Bot"
+			}
 		}
-		return "Chromium Browser"
-	}
-	if strings.Contains(ua, "firefox") {
-		return "Firefox Browser"
-	}
-	if strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome") {
-		return "Safari Browser"
-	}
-	if strings.Contains(ua, "edg") {
-		return "Microsoft Edge"
+		return application, browserInfo, version, osInfo, isMobile, isBot
 	}
 
-	// Common tools
-	if strings.Contains(ua, "curl") {
-		return "curl"
-	}
-	if strings.Contains(ua, "wget") {
-		return "wget"
-	}
-	if strings.Contains(ua, "postman") {
-		return "Postman"
-	}
-	if strings.Contains(ua, "python") {
-		return "Python"
-	}
-	if strings.Contains(ua, "go-http-client") {
-		return "Go HTTP Client"
-	}
-	if strings.Contains(ua, "java") {
-		return "Java Application"
-	}
-	if strings.Contains(ua, "node") {
-		return "Node.js Application"
-	}
-
-	// Mobile browsers
-	if strings.Contains(ua, "mobile") || strings.Contains(ua, "android") {
-		if strings.Contains(ua, "chrome") {
-			return "Chrome Mobile"
+	// Обработка командных утилит
+	uaLower := strings.ToLower(userAgentString)
+	if strings.Contains(uaLower, "curl") {
+		application = "curl"
+		browserInfo = "curl"
+		// Извлекаем версию curl
+		if strings.Contains(uaLower, "curl/") {
+			parts := strings.Split(userAgentString, "curl/")
+			if len(parts) > 1 {
+				versionPart := strings.Fields(parts[1])[0]
+				browserVersion = versionPart
+			}
 		}
-		return "Mobile Browser"
+		return application, browserInfo, browserVersion, osInfo, false, false
 	}
 
-	// Bots and crawlers
-	if strings.Contains(ua, "bot") || strings.Contains(ua, "crawler") || strings.Contains(ua, "spider") {
-		return "Bot/Crawler"
+	if strings.Contains(uaLower, "wget") {
+		application = "wget"
+		browserInfo = "wget"
+		if strings.Contains(uaLower, "wget/") {
+			parts := strings.Split(userAgentString, "Wget/")
+			if len(parts) > 1 {
+				versionPart := strings.Fields(parts[1])[0]
+				browserVersion = versionPart
+			}
+		}
+		return application, browserInfo, browserVersion, osInfo, false, false
 	}
 
-	return ""
+	if strings.Contains(uaLower, "postman") {
+		application = "Postman"
+		browserInfo = "Postman"
+		return application, browserInfo, "", osInfo, false, false
+	}
+
+	if strings.Contains(uaLower, "python") {
+		application = "Python"
+		browserInfo = "Python"
+		if strings.Contains(uaLower, "python/") {
+			parts := strings.Split(userAgentString, "Python/")
+			if len(parts) > 1 {
+				versionPart := strings.Fields(parts[1])[0]
+				browserVersion = versionPart
+			}
+		}
+		return application, browserInfo, browserVersion, osInfo, false, false
+	}
+
+	if strings.Contains(uaLower, "go-http-client") {
+		application = "Go HTTP Client"
+		browserInfo = "Go"
+		return application, browserInfo, "", osInfo, false, false
+	}
+
+	// Обработка браузеров
+	browserInfo = browser
+	browserVersion = version
+	osName = osInfo
+
+	// Определяем тип приложения для браузеров
+	if isMobile {
+		switch browser {
+		case "Chrome":
+			application = "Chrome Mobile"
+		case "Safari":
+			application = "Safari Mobile"
+		case "Firefox":
+			application = "Firefox Mobile"
+		case "Opera":
+			application = "Opera Mobile"
+		case "Edge":
+			application = "Edge Mobile"
+		default:
+			application = "Mobile Browser"
+		}
+	} else {
+		switch browser {
+		case "Chrome":
+			application = "Chrome Browser"
+		case "Safari":
+			application = "Safari Browser"
+		case "Firefox":
+			application = "Firefox Browser"
+		case "Opera":
+			application = "Opera Browser"
+		case "Edge":
+			application = "Microsoft Edge"
+		case "Internet Explorer":
+			application = "Internet Explorer"
+		default:
+			if browser != "" {
+				application = browser + " Browser"
+			} else {
+				// Fallback анализ
+				if strings.Contains(uaLower, "chrome") && !strings.Contains(uaLower, "edg") {
+					application = "Chrome Browser"
+					browserInfo = "Chrome"
+				} else if strings.Contains(uaLower, "firefox") {
+					application = "Firefox Browser"
+					browserInfo = "Firefox"
+				} else if strings.Contains(uaLower, "safari") && !strings.Contains(uaLower, "chrome") {
+					application = "Safari Browser"
+					browserInfo = "Safari"
+				} else if strings.Contains(uaLower, "edg") {
+					application = "Microsoft Edge"
+					browserInfo = "Edge"
+				} else {
+					application = "Unknown Browser"
+					browserInfo = "Unknown"
+				}
+			}
+		}
+	}
+
+	// Если engine информация доступна и browser пустой
+	if browserInfo == "" && engineName != "" {
+		browserInfo = engineName
+		browserVersion = engineVersion
+	}
+
+	return application, browserInfo, browserVersion, osName, isMobile, isBot
 }
 
 func loadDatabase() {
@@ -248,8 +370,32 @@ func saveDatabaseAsync() {
 	}()
 }
 
-func updateDatabaseWithUserAgent(ja4Fingerprint, userAgent, clientIP string) {
-	if userAgent == "" || userAgent == "Unknown" {
+func cleanupPendingEntries() {
+	pendingMux.Lock()
+	defer pendingMux.Unlock()
+
+	cutoff := time.Now().Add(-pendingTimeout)
+	for key, entry := range pendingEntries {
+		if entry.Timestamp.Before(cutoff) {
+			delete(pendingEntries, key)
+			log.Printf("Removed expired pending entry for %s", key)
+		}
+	}
+}
+
+func startPendingCleanup() {
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			cleanupPendingEntries()
+		}
+	}()
+}
+
+func updateDatabaseWithUserAgent(ja4Fingerprint, userAgentString, clientIP string) {
+	if userAgentString == "" || userAgentString == "Unknown" {
 		return
 	}
 
@@ -259,20 +405,29 @@ func updateDatabaseWithUserAgent(ja4Fingerprint, userAgent, clientIP string) {
 	baseIP := strings.Split(clientIP, ":")[0]
 	updated := false
 
+	// Парсим User-Agent
+	application, browser, browserVersion, os, isMobile, isBot := identifyApplication(userAgentString)
+
 	for keyStr, entry := range database {
 		if entry.JA4Fingerprint == ja4Fingerprint {
 			entryBaseIP := strings.Split(entry.ClientIP, ":")[0]
 			if entryBaseIP == baseIP && (entry.UserAgentString == "Unknown" || entry.UserAgentString == "") {
 				delete(database, keyStr)
 
-				newKey := ja4Fingerprint + ":" + userAgent
-				entry.UserAgentString = userAgent
-				entry.Application = identifyApplication(userAgent)
+				newKey := ja4Fingerprint + ":" + userAgentString
+				entry.UserAgentString = userAgentString
+				entry.Application = application
+				entry.Browser = browser
+				entry.BrowserVersion = browserVersion
+				entry.OS = os
+				entry.Mobile = isMobile
+				entry.Bot = isBot
 				entry.Timestamp = time.Now()
 				entry.ClientIP = clientIP
 				database[newKey] = entry
 
-				log.Printf("Updated database entry: %s -> %s (%s)", ja4Fingerprint, userAgent, entry.Application)
+				log.Printf("Updated database entry: %s -> %s (%s %s on %s)",
+					ja4Fingerprint, userAgentString, browser, browserVersion, os)
 				updated = true
 				break
 			}
@@ -284,11 +439,24 @@ func updateDatabaseWithUserAgent(ja4Fingerprint, userAgent, clientIP string) {
 	}
 }
 
-func addToDatabase(ja4Fingerprint, userAgent, clientIP string) {
+func addToDatabase(ja4Fingerprint, userAgentString, clientIP string) {
 	databaseMux.Lock()
 	defer databaseMux.Unlock()
 
-	key := ja4Fingerprint + ":" + userAgent
+	// Если User-Agent неизвестен, добавляем в pending
+	if userAgentString == "" || userAgentString == "Unknown" {
+		pendingMux.Lock()
+		pendingEntries[clientIP] = &PendingEntry{
+			JA4Fingerprint: ja4Fingerprint,
+			ClientIP:       clientIP,
+			Timestamp:      time.Now(),
+		}
+		pendingMux.Unlock()
+		log.Printf("Added pending entry for %s: %s", clientIP, ja4Fingerprint)
+		return
+	}
+
+	key := ja4Fingerprint + ":" + userAgentString
 
 	if entry, exists := database[key]; exists {
 		entry.ObservationCount++
@@ -296,16 +464,24 @@ func addToDatabase(ja4Fingerprint, userAgent, clientIP string) {
 		entry.ClientIP = clientIP
 		log.Printf("Updated observation count for %s: %d", ja4Fingerprint, entry.ObservationCount)
 	} else {
-		application := identifyApplication(userAgent)
+		// Парсим User-Agent
+		application, browser, browserVersion, os, isMobile, isBot := identifyApplication(userAgentString)
+
 		database[key] = &DatabaseEntry{
 			Application:      application,
-			UserAgentString:  userAgent,
+			UserAgentString:  userAgentString,
 			JA4Fingerprint:   ja4Fingerprint,
 			ClientIP:         clientIP,
 			Timestamp:        time.Now(),
 			ObservationCount: 1,
+			Browser:          browser,
+			BrowserVersion:   browserVersion,
+			OS:               os,
+			Mobile:           isMobile,
+			Bot:              isBot,
 		}
-		log.Printf("Added new database entry: %s (%s)", ja4Fingerprint, application)
+		log.Printf("Added new database entry: %s (%s %s %s on %s)",
+			ja4Fingerprint, application, browser, browserVersion, os)
 	}
 
 	saveDatabaseAsync()
@@ -507,6 +683,21 @@ func ja4Handler(w http.ResponseWriter, r *http.Request) {
 	userAgentCache[clientIP] = userAgent
 	cacheMux.Unlock()
 
+	// Проверяем pending записи
+	if userAgent != "Unknown" && userAgent != "" {
+		pendingMux.Lock()
+		if pendingEntry, exists := pendingEntries[clientIP]; exists {
+			delete(pendingEntries, clientIP)
+			pendingMux.Unlock()
+
+			// Добавляем запись с реальным User-Agent
+			addToDatabase(pendingEntry.JA4Fingerprint, userAgent, clientIP)
+			log.Printf("Processed pending entry for %s with User-Agent: %s", clientIP, userAgent)
+		} else {
+			pendingMux.Unlock()
+		}
+	}
+
 	cacheMux.RLock()
 	response, exists := ja4Cache[clientIP]
 	cacheMux.RUnlock()
@@ -523,14 +714,26 @@ func ja4Handler(w http.ResponseWriter, r *http.Request) {
 		updateDatabaseWithUserAgent(response.Fingerprint, userAgent, clientIP)
 	}
 
+	application, browser, browserVersion, os, isMobile, isBot := identifyApplication(userAgent)
+
 	enhancedResponse := struct {
 		*JA4Response
-		UserAgent   string `json:"user_agent"`
-		Application string `json:"application"`
+		UserAgent      string `json:"user_agent"`
+		Application    string `json:"application"`
+		Browser        string `json:"browser,omitempty"`
+		BrowserVersion string `json:"browser_version,omitempty"`
+		OS             string `json:"os,omitempty"`
+		Mobile         bool   `json:"mobile,omitempty"`
+		Bot            bool   `json:"bot,omitempty"`
 	}{
-		JA4Response: response,
-		UserAgent:   userAgent,
-		Application: identifyApplication(userAgent),
+		JA4Response:    response,
+		UserAgent:      userAgent,
+		Application:    application,
+		Browser:        browser,
+		BrowserVersion: browserVersion,
+		OS:             os,
+		Mobile:         isMobile,
+		Bot:            isBot,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -588,6 +791,23 @@ func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, target, http.StatusMovedPermanently)
 }
 
+func pendingHandler(w http.ResponseWriter, r *http.Request) {
+	pendingMux.RLock()
+	entries := make([]PendingEntry, 0, len(pendingEntries))
+	for _, entry := range pendingEntries {
+		entries = append(entries, *entry)
+	}
+	pendingMux.RUnlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(map[string]interface{}{
+		"pending_count": len(entries),
+		"entries":       entries,
+	})
+}
+
 func main() {
 	// Проверяем переменные окружения
 	domain := os.Getenv("DOMAIN")
@@ -606,6 +826,9 @@ func main() {
 	// Запускаем периодическое автосохранение
 	startPeriodicSave()
 
+	// Запускаем периодическое очищение pending записей
+	startPendingCleanup()
+
 	// Let's Encrypt autocert manager
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
@@ -618,6 +841,7 @@ func main() {
 	mux.HandleFunc("/ja4", ja4Handler)
 	mux.HandleFunc("/database", databaseHandler)
 	mux.HandleFunc("/export", exportHandler)
+	mux.HandleFunc("/pending", pendingHandler)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
@@ -626,6 +850,7 @@ func main() {
 				"/ja4":      "Get your JA4 fingerprint",
 				"/database": "View collected fingerprints database",
 				"/export":   "Download database as JSON file",
+				"/pending":  "View pending TLS sessions without User-Agent",
 			},
 			"usage":    "Connect via HTTPS to capture your TLS fingerprint",
 			"standard": "Based on official FoxIO JA4 specification",
@@ -681,6 +906,7 @@ func main() {
 	fmt.Printf("  GET https://%s/ja4 - получить JA4 fingerprint\n", domain)
 	fmt.Printf("  GET https://%s/database - просмотр собранной базы\n", domain)
 	fmt.Printf("  GET https://%s/export - скачать базу в JSON\n", domain)
+	fmt.Printf("  GET https://%s/pending - просмотр ожидающих TLS сессий\n", domain)
 	fmt.Printf("  GET https://%s/ - информация о сервере\n", domain)
 	fmt.Printf("\n")
 	fmt.Printf("Starting servers...\n")
